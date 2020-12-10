@@ -1,0 +1,14 @@
+{
+  "realm": "VSource",
+  "auth-server-url": "http://localhost:8080/auth/",
+  "ssl-required": "external",
+  "resource": "webapp",
+  "enable-cors" : true,
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "32b86cab-c24e-43e5-9853-9242bbf2cfe0"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0,
+  "policy-enforcer": {}
+}
