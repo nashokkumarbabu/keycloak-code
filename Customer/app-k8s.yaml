@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: oip
+  labels:
+    app: syndicated-loans-customer
+  name: syndicated-loans-customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: syndicated-loans-customer
+  template:
+    metadata:
+      labels:
+        app: syndicated-loans-customer
+    spec:
+      containers:
+      - image: 332256422484.dkr.ecr.eu-west-2.amazonaws.com/syndicated-loans-customer:0.0.1
+        imagePullPolicy: Always
+        name: syndicated-loans-customer
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: "k8s"
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: db_host
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: db_port
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: db_name
+          - name: DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: username
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: password                
+          - name: KEYCLOAK_REALM
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: keycloak_realm
+          - name: KEYCLOAK_AUTH_SERVER_URL
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: keycloak_auth_server_url                   
+          - name: KEYCLOAK_RESOURCE
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: keycloak_resource                  
+          - name: KEYCLOAK_CREDENTIALS_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: syndicate-loans-secret
+                key: keycloak_credentials_secret  
+          - name: CORS_ORIGIN
+            valueFrom:
+              configMapKeyRef:
+                name: syndicate-loans-configmap
+                key: cors_origin    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: oip
+  labels:
+    app: syndicated-loans-customer
+  name: syndicated-loans-customer
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: syndicated-loans-customer
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: oip
+  labels:
+    app: syndicated-loans-customer
+  name: syndicated-loans-customer
+spec:
+  rules:
+  - host: syn-customer.services.oip.virtusa.dev
+    http:
+      paths:
+      - backend:
+          serviceName: syndicated-loans-customer
+          servicePort: http
+        path: /
